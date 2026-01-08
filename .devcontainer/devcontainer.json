@@ -1,0 +1,56 @@
+{
+  "name": "WordPress Astro Dev Stack",
+  "image": "mcr.microsoft.com/devcontainers/universal:2-linux",
+  "features": {
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {},
+    "ghcr.io/devcontainers/features/git:1": {}
+  },
+  "remoteUser": "codespace",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "GitHub.copilot",
+        "ms-vscode.remote-repositories",
+        "esbenp.prettier-vscode",
+        "dbaeumer.vscode-eslint",
+        "astro-build.astro-vscode",
+        "eamodio.gitlens",
+        "ms-azuretools.vscode-docker",
+        "ms-vscode.makefile-tools"
+      ],
+      "settings": {
+        "editor.formatOnSave": true,
+        "files.exclude": {
+          "**/node_modules": true,
+          "**/.git": true,
+          "**/cms/wordpress": true
+        },
+        "search.exclude": {
+          "**/node_modules": true,
+          "**/cms/wordpress": true
+        }
+      }
+    }
+  },
+  "forwardPorts": [3000, 8000, 8080, 3306],
+  "portsAttributes": {
+    "3000": {
+      "label": "Astro Frontend",
+      "onAutoForward": "notify"
+    },
+    "8000": {
+      "label": "WordPress CMS",
+      "onAutoForward": "notify"
+    },
+    "8080": {
+      "label": "phpMyAdmin",
+      "onAutoForward": "notify"
+    },
+    "3306": {
+      "label": "MySQL Database",
+      "onAutoForward": "silent"
+    }
+  },
+  "postCreateCommand": "bash .devcontainer/post-create.sh",
+  "postStartCommand": "bash .devcontainer/post-start.sh"
+}

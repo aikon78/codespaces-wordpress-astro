@@ -1,10 +1,52 @@
+# Environment
 .env
 .env.local
+.env.*.local
+
+# Dependencies
 node_modules/
+package-lock.json
+yarn.lock
+
+# Build outputs
 dist/
-.DS_Store
-*.log
 build/
-wordpress/
+.astro/
+out/
+
+# WordPress
+cms/wordpress/
+wp-content/
+wp-config.php
+
+# Database
 db_data/
+*.sql
+
+# Logs
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDE
 .vscode/settings.json
+.vscode/launch.json
+.idea/
+*.swp
+*.swo
+
+# Misc
+.cache/
+.turbo/
+dist-ssr/
