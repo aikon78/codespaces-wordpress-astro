@@ -59,6 +59,42 @@ else
 	echo "⏭️ Frontend esistente, salto il scaffold."
 fi
 
+echo "\n--- Verifico node_modules in frontend ---"
+if [ ! -d frontend/node_modules ] || [ -z "$(ls -A frontend/node_modules 2>/dev/null)" ]; then
+	echo "⚠️  node_modules mancante/vuoto — reinstallo dipendenze..."
+	cd frontend && npm install --no-audit && cd ..
+else
+	echo "✅ node_modules esistente"
+fi
+
+echo "\n--- Attendo che WordPress sia pronto (60 secondi max) ---"
+for i in {1..60}; do
+	if curl -s http://localhost:8000/ >/dev/null 2>&1; then
+		echo "✅ WordPress pronto!"
+		break
+	fi
+	echo "⏳ Tentativo $i/60: WordPress non ancora pronto..."
+	sleep 1
+done
+
+echo "\n--- Installo WordPress via WP-CLI se necessario ---"
+# Attendo che il DB sia pronto
+sleep 10
+
+# Verifico se WordPress è già installato
+if docker exec wordpress-db mysql -u wordpress_user -pwordpress_pass -D wordpress_db -e "SELECT 1 FROM wp_options LIMIT 1;" >/dev/null 2>&1; then
+	echo "✅ WordPress già installato"
+else
+	echo "⚙️  Installazione WordPress via WP-CLI..."
+	docker exec -w /var/www/html wordpress-cms php wp-cli.phar core install --allow-root \
+		--url='http://localhost:8000' \
+		--title='WordPress Codespaces' \
+		--admin_user='admin' \
+		--admin_password='admin123' \
+		--admin_email='admin@example.com' \
+		--skip-email || echo "⚠️  Installazione WP parziale (potrebbe essere già installato)"
+fi
+
 echo "✅ Setup iniziale completato"
 echo ""
 echo "Prossimo step: npm run start (dalla root del progetto) o 'npm run dev' per log e frontend" 

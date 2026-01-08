@@ -36,18 +36,22 @@
   "portsAttributes": {
     "3000": {
       "label": "Astro Frontend",
-      "onAutoForward": "notify"
+      "onAutoForward": "notify",
+      "visibility": "public"
     },
     "8000": {
       "label": "WordPress CMS",
-      "onAutoForward": "notify"
+      "onAutoForward": "notify",
+      "visibility": "public"
     },
     "8080": {
       "label": "phpMyAdmin",
-      "onAutoForward": "notify"
+      "onAutoForward": "notify",
+      "visibility": "public"
     },
     "3306": {
       "label": "MySQL Database",
+      "visibility": "private",
       "onAutoForward": "silent"
     }
   },
