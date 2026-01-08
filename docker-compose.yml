@@ -1,0 +1,69 @@
+version: '3.9'
+
+services:
+  db:
+    image: mysql:8.0
+    container_name: wordpress-db
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_DATABASE: wordpress_db
+      MYSQL_USER: wordpress_user
+      MYSQL_PASSWORD: wordpress_pass
+    ports:
+      - "3306:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+    networks:
+      - wordpress-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 5s
+      retries: 5
+
+  wordpress:
+    image: wordpress:latest
+    container_name: wordpress-cms
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      WORDPRESS_DB_HOST: db
+      WORDPRESS_DB_NAME: wordpress_db
+      WORDPRESS_DB_USER: wordpress_user
+      WORDPRESS_DB_PASSWORD: wordpress_pass
+      WORDPRESS_DEBUG: 'false'
+      WORDPRESS_CONFIG_EXTRA: |
+        define('WP_MEMORY_LIMIT', '256M');
+        define('WP_MAX_MEMORY_LIMIT', '512M');
+    ports:
+      - "8000:80"
+    volumes:
+      - ./cms/wordpress:/var/www/html
+      - ./cms/php.ini:/usr/local/etc/php/conf.d/custom-php.ini:ro
+    networks:
+      - wordpress-network
+    restart: unless-stopped
+
+  phpmyadmin:
+    image: phpmyadmin:latest
+    container_name: wordpress-phpmyadmin
+    depends_on:
+      - db
+    environment:
+      PMA_HOST: db
+      PMA_USER: wordpress_user
+      PMA_PASSWORD: wordpress_pass
+      PMA_ABSOLUTE_URI: http://localhost:8080/
+    ports:
+      - "8080:80"
+    networks:
+      - wordpress-network
+    restart: unless-stopped
+
+volumes:
+  db_data:
+    driver: local
+
+networks:
+  wordpress-network:
+    driver: bridge

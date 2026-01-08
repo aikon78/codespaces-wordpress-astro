@@ -1,0 +1,10 @@
+.env
+.env.local
+node_modules/
+dist/
+.DS_Store
+*.log
+build/
+wordpress/
+db_data/
+.vscode/settings.json
