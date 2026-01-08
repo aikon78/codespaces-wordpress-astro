@@ -35,8 +35,8 @@ services:
       WORDPRESS_CONFIG_EXTRA: |
         define('WP_MEMORY_LIMIT', '256M');
         define('WP_MAX_MEMORY_LIMIT', '512M');
-    ports:
-      - "8000:80"
+    expose:
+      - "80"
     volumes:
       - ./cms/wordpress:/var/www/html
       - ./cms/php.ini:/usr/local/etc/php/conf.d/custom-php.ini:ro
