@@ -7,14 +7,24 @@
 add_filter( 'rest_pre_serve_request', function( $served, $server, $request ) {
     $origin = get_http_origin();
     
-    // Aggiungi gli URL del tuo frontend (dev e prod)
+    // Lista di URL frontend consentiti
     $allowed_origins = array(
-        'http://localhost:3000',
-        'http://localhost:5173',
-        // 'https://tuodominio.com' // Per produzione
+        'http://localhost:3000',        // Astro dev
+        'http://localhost:5173',        // Vite dev
+        'http://localhost:4321',        // Astro alternative port
     );
     
-    if ( in_array( $origin, $allowed_origins ) ) {
+    // Auto-detect GitHub Codespaces frontend URL
+    if ( isset( $_ENV['CODESPACE_NAME'] ) ) {
+        $codespace_name = $_ENV['CODESPACE_NAME'];
+        $allowed_origins[] = "https://{$codespace_name}-3000.app.github.dev";
+        $allowed_origins[] = "https://{$codespace_name}-4321.app.github.dev";
+    }
+    
+    // Supporta pattern wildcard per Codespaces (più flessibile)
+    $is_codespace_origin = preg_match('/^https:\/\/.*\.app\.github\.dev$/', $origin);
+    
+    if ( in_array( $origin, $allowed_origins ) || $is_codespace_origin ) {
         header( 'Access-Control-Allow-Origin: ' . esc_url_raw( $origin ) );
         header( 'Access-Control-Allow-Credentials: true' );
         header( 'Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS' );

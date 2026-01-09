@@ -5,6 +5,7 @@
 ## Panoramica Progetto
 
 Questo è un progetto headless CMS che combina:
+
 - **Backend**: WordPress (CMS)
 - **Frontend**: Astro (Framework statico/dinamico)
 - **API**: REST API di WordPress per la comunicazione
@@ -59,35 +60,61 @@ npm run dev
 ## Sviluppo
 
 ### WordPress Admin
+
 - URL: http://localhost:8000/wp-admin
 - Crea post, categorie, media
 
 ### Astro Frontend
+
 - URL: http://localhost:3000
 - Auto-refresh quando cambi i file
 - Fetch automatico da WordPress
 
 ### Database Manager
+
 - URL: http://localhost:8080 (phpMyAdmin)
 - User: `wordpress_user`
 - Password: `wordpress_pass`
 
 ## API Integration
 
+### Configurazione URL WordPress
+
+L'URL del backend WordPress è configurabile tramite variabili d'ambiente:
+
+**frontend/.env**:
+
+```env
+# Sviluppo locale
+PUBLIC_WORDPRESS_URL=http://localhost:8000
+
+# Produzione
+PUBLIC_WORDPRESS_URL=https://your-domain.com
+```
+
+Il sistema rileva automaticamente l'ambiente:
+
+1. Se `PUBLIC_WORDPRESS_URL` è definito, usa quello
+2. Se in Codespaces, usa `localhost:8000` (rete interna Docker)
+3. Altrimenti fallback a `localhost:8000`
+
 ### Client API (src/lib/wordpress-api.ts)
 
 ```typescript
-import wordPressAPI from '@/lib/wordpress-api';
+import {
+  getPosts,
+  getPost,
+  getCategories,
+  getPostBySlug,
+} from "@/lib/wordpress-api";
 
 // Posts
-const posts = await wordPressAPI.getPosts();
-const post = await wordPressAPI.getPost(1);
+const posts = await getPosts();
+const post = await getPost(1);
+const postBySlug = await getPostBySlug("my-post");
 
 // Categories
-const categories = await wordPressAPI.getCategories();
-
-// Pages
-const page = await wordPressAPI.getPageBySlug('chi-siamo');
+const categories = await getCategories();
 ```
 
 ### Aggiungere Nuove Features API
@@ -109,6 +136,7 @@ async getCustomEndpoint(params?: Record<string, any>) {
 ## Build e Deployment
 
 ### Frontend
+
 ```bash
 cd frontend
 npm run build    # Crea build statica
@@ -119,6 +147,7 @@ npm run build && vercel
 ```
 
 ### Backend
+
 ```bash
 docker-compose up -d  # Deploy su server
 
@@ -154,16 +183,19 @@ cp frontend/.env.example frontend/.env
 ## Troubleshooting
 
 ### WordPress non carica
+
 ```bash
 docker-compose logs wordpress
 docker-compose restart wordpress
 ```
 
 ### CORS errors
+
 - Verifica `cms/cors-config.php`
 - Assicurati che l'URL sia nella whitelist
 
 ### Astro non vede i post
+
 - Verifica che WordPress sia online: http://localhost:8000
 - Controlla la console del browser per gli errori
 - Verifica i parametri API in `src/lib/wordpress-api.ts`

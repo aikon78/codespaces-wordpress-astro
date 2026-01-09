@@ -33,7 +33,10 @@ start: docker-up
 dev: docker-up
 	@echo "🔄 Dev mode avviato (Ctrl+C per fermare)"
 	@echo ""
-	@concurrently "docker-compose logs -f" "cd frontend && npm run dev"
+	@echo "🌐 Frontend:  http://localhost:3000"
+	@echo "🔗 WordPress: http://localhost:8000"
+	@echo ""
+	@cd frontend && npm run dev
 
 docker-up:
 	@echo "🐳 Avvio Docker Compose..."
