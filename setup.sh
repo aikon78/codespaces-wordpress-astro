@@ -35,6 +35,30 @@ mkdir -p cms/wordpress
 echo "✅ Cartelle create"
 echo ""
 
+# Configura variabili d'ambiente per Astro
+echo "⚙️  Configurazione variabili d'ambiente..."
+if [ ! -z "$CODESPACE_NAME" ]; then
+    WORDPRESS_URL="https://${CODESPACE_NAME}-8000.app.github.dev"
+    
+    cat > frontend/.env << EOF
+# WordPress API Configuration (GitHub Codespaces)
+PUBLIC_CODESPACE_NAME=$CODESPACE_NAME
+PUBLIC_WORDPRESS_URL=$WORDPRESS_URL
+EOF
+    
+    echo "✅ File .env creato per Codespaces (PUBLIC_CODESPACE_NAME=$CODESPACE_NAME)"
+else
+    WORDPRESS_URL="http://localhost:8000"
+    
+    cat > frontend/.env << EOF
+# WordPress API Configuration (Local Development)
+PUBLIC_WORDPRESS_URL=$WORDPRESS_URL
+EOF
+    
+    echo "✅ File .env creato per sviluppo locale (PUBLIC_WORDPRESS_URL=$WORDPRESS_URL)"
+fi
+echo ""
+
 # Installa dipendenze Astro (se non già fatto)
 echo "📦 Installazione dipendenze Astro..."
 if [ ! -d "frontend/node_modules" ]; then

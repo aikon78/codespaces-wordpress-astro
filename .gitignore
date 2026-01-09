@@ -14,10 +14,14 @@ build/
 .astro/
 out/
 
-# WordPress
+# WordPress core (ignorato)
 cms/wordpress/
 wp-content/
 wp-config.php
+
+# Temi e plugin custom (versionati)
+!cms/themes/
+!cms/plugins/
 
 # Database
 db_data/
