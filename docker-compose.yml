@@ -32,11 +32,17 @@ services:
       WORDPRESS_DB_USER: wordpress_user
       WORDPRESS_DB_PASSWORD: wordpress_pass
       WORDPRESS_DEBUG: 'false'
+      # URL di WordPress - configurabile per dev/prod/staging
+      # Default (Codespaces): https://${CODESPACE_NAME}-8000.app.github.dev
+      # Per sviluppo locale sovrascrivi: WORDPRESS_URL=http://localhost:8000
+      # Esempio: WORDPRESS_URL=https://example.com docker-compose up -d
+      WORDPRESS_URL: ${WORDPRESS_URL:-https://${CODESPACE_NAME}-8000.app.github.dev}
       WORDPRESS_CONFIG_EXTRA: |
         define('WP_MEMORY_LIMIT', '256M');
         define('WP_MAX_MEMORY_LIMIT', '512M');
-    expose:
-      - "80"
+        define('FORCE_SSL_ADMIN', true);
+    ports:
+      - "8000:80"
     volumes:
       - ./cms/wordpress:/var/www/html
       - ./cms/php.ini:/usr/local/etc/php/conf.d/custom-php.ini:ro

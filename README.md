@@ -14,7 +14,10 @@ bash setup.sh
 npm run start
 ```
 
-**O manualmente:**
+**L'URL di WordPress verrà configurato automaticamente per Codespaces.**
+
+O manualmente:
+
 ```bash
 make start      # Avvia Docker + Astro dev server
 make dev        # Dev mode con log
@@ -32,6 +35,50 @@ cd frontend
 npm run dev
 ```
 
+## ⚙️ Configurazione URL WordPress
+
+L'URL di WordPress può essere configurato per diversi ambienti:
+
+### Sviluppo Locale
+
+```bash
+# Default: http://localhost:8000
+docker-compose up -d
+```
+
+### GitHub Codespaces
+
+```bash
+# Configurazione automatica (rilevato da CODESPACE_NAME)
+bash setup-wordpress-url.sh
+```
+
+### Produzione / Domini Personalizzati
+
+```bash
+# Via variabile d'ambiente
+export WORDPRESS_URL=https://example.com
+docker-compose up -d
+
+# O nel file .env
+# Copia da .env.example:
+cp .env.example .env
+# Modifica WORDPRESS_URL nel file .env
+docker-compose --env-file .env up -d
+
+# Poi configura WordPress
+bash setup-wordpress-url.sh
+```
+
+### Ambienti Supportati
+
+| Ambiente       | URL Esempio                             | Come impostarlo                        |
+| -------------- | --------------------------------------- | -------------------------------------- |
+| **Locale**     | `http://localhost:8000`                 | Default, nessuna configurazione        |
+| **Codespaces** | `https://name-8000.app.github.dev` | Auto-rilevato da `CODESPACE_NAME`      |
+| **Staging**    | `https://staging.example.com`           | `export WORDPRESS_URL=...`             |
+| **Produzione** | `https://example.com`                   | File `.env` + `setup-wordpress-url.sh` |
+
 ## Struttura del Progetto
 
 ```
@@ -43,6 +90,8 @@ npm run dev
 ├── cms/                        # WordPress CMS backend
 ├── frontend/                   # Astro frontend
 ├── docker-compose.yml          # Orchestrazione servizi
+├── setup-wordpress-url.sh      # Script configurazione URL dinamica
+├── .env.example                # Template variabili d'ambiente
 ├── Makefile                    # Comandi utili
 ├── CODESPACES.md               # Guida GitHub Codespaces
 ├── SETUP.md                    # Guida setup dettagliata
@@ -52,15 +101,18 @@ npm run dev
 ## ⚙️ Configurazione Rapida
 
 ### 1. Backend WordPress
+
 - **URL**: http://localhost:8000
 - **Admin**: http://localhost:8000/wp-admin
 - **API REST**: http://localhost:8000/wp-json/wp/v2/
 
 ### 2. Frontend Astro
+
 - **URL**: http://localhost:3000
 - **Dev Server**: Auto-refresh quando modifichi i file
 
 ### 3. Database Manager
+
 - **phpMyAdmin**: http://localhost:8080
 - **User**: `wordpress_user`
 - **Pass**: `wordpress_pass`
@@ -89,7 +141,7 @@ make help
 Il frontend Astro si connette al backend WordPress tramite l'API REST:
 
 ```typescript
-import wordPressAPI from '@/lib/wordpress-api';
+import wordPressAPI from "@/lib/wordpress-api";
 
 // Ottenere post
 const posts = await wordPressAPI.getPosts();
@@ -98,7 +150,7 @@ const posts = await wordPressAPI.getPosts();
 const post = await wordPressAPI.getPost(1);
 
 // Post per slug
-const post = await wordPressAPI.getPostBySlug('mio-post');
+const post = await wordPressAPI.getPostBySlug("mio-post");
 ```
 
 ## 📋 Requisiti
@@ -110,6 +162,7 @@ const post = await wordPressAPI.getPostBySlug('mio-post');
 ## 🌐 Deployment
 
 ### Frontend (Astro)
+
 ```bash
 cd frontend
 npm run build      # Build statica
@@ -120,6 +173,7 @@ vercel            # Segui le istruzioni
 ```
 
 ### Backend (WordPress)
+
 Consulta `docker-compose.prod.yml` per il deployment in produzione su server con Docker.
 
 ## 📖 Documentazione
@@ -131,17 +185,20 @@ Consulta `docker-compose.prod.yml` per il deployment in produzione su server con
 ## 🆘 Troubleshooting
 
 ### "WordPress non carica"
+
 ```bash
 docker-compose logs wordpress
 docker-compose restart wordpress
 ```
 
 ### "Astro non vede i post"
+
 - Verifica che WordPress sia online: http://localhost:8000
 - Controlla la console del browser
 - Verifica i parametri API in `frontend/src/lib/wordpress-api.ts`
 
 ### CORS errors
+
 - Verifica `cms/cors-config.php`
 - Riavvia WordPress: `docker-compose restart wordpress`
 
