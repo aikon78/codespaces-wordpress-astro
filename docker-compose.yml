@@ -1,14 +1,12 @@
 services:
   db:
-    image: mysql:8.0
+    image: mysql:8.0.40
     container_name: wordpress-db
     environment:
       MYSQL_ROOT_PASSWORD: root_password
       MYSQL_DATABASE: wordpress_db
       MYSQL_USER: wordpress_user
       MYSQL_PASSWORD: wordpress_pass
-    ports:
-      - "3306:3306"
     volumes:
       - db_data:/var/lib/mysql
     networks:
@@ -19,7 +17,7 @@ services:
       retries: 5
 
   wordpress:
-    image: wordpress:latest
+    image: wordpress:6.6.2-php8.3-apache
     container_name: wordpress-cms
     depends_on:
       db:
@@ -30,29 +28,31 @@ services:
       WORDPRESS_DB_USER: wordpress_user
       WORDPRESS_DB_PASSWORD: wordpress_pass
       WORDPRESS_DEBUG: 'false'
-      # URL di WordPress - configurabile per dev/prod/staging
-      # Default (Codespaces): https://${CODESPACE_NAME}-8000.app.github.dev
-      # Per sviluppo locale sovrascrivi: WORDPRESS_URL=http://localhost:8000
-      # Esempio: WORDPRESS_URL=https://example.com docker-compose up -d
-      WORDPRESS_URL: ${WORDPRESS_URL:-https://${CODESPACE_NAME}-8000.app.github.dev}
+      # URL di WordPress - IMPORTANTE: il valore reale viene letto da wp_options nel DB
+      # Questa variabile è principalmente per wp-config.php
+      # Il DB contiene la fonte di verità (siteurl/home in wp_options)
+      # Configura via: docker exec wordpress-db mysql ... UPDATE wp_options ...
+      # WORDPRESS_URL: configurazione rimossa - usa wp_options nel DB
       WORDPRESS_CONFIG_EXTRA: |
         define('WP_MEMORY_LIMIT', '256M');
         define('WP_MAX_MEMORY_LIMIT', '512M');
-        define('FORCE_SSL_ADMIN', true);
+        define('FORCE_SSL_ADMIN', false);
+        define('FORCE_SSL_LOGIN', false);
+        define('AUTOMATIC_UPDATER_DISABLED', false);
     ports:
       - "8000:80"
     volumes:
       - ./cms/wordpress:/var/www/html
       - ./cms/php.ini:/usr/local/etc/php/conf.d/custom-php.ini:ro
       # Temi e plugin personalizzati (versionati in git)
-      - ./cms/themes:/var/www/html/wp-content/themes/custom
-      - ./cms/plugins:/var/www/html/wp-content/plugins/custom
+      - ./cms/themes:/var/www/html/wp-content/themes
+      - ./cms/plugins:/var/www/html/wp-content/plugins
     networks:
       - wordpress-network
     restart: unless-stopped
 
   phpmyadmin:
-    image: phpmyadmin:latest
+    image: phpmyadmin:5.2.1-apache
     container_name: wordpress-phpmyadmin
     depends_on:
       - db

@@ -3,20 +3,63 @@ set -e
 
 echo "🔧 Installazione/Configurazione WordPress..."
 
-# Definisci l'URL WordPress corretto
+# IMPORTANTE: Deriva il dominio pubblico che verrà scritto nel database WordPress
+# WordPress usa wp_options.siteurl e wp_options.home come fonte autoritativa
+# wp-config.php NON deve sovrascrivere questi valori con WP_HOME/WP_SITEURL
 if [ -n "$CODESPACE_NAME" ]; then
-    WP_URL="https://${CODESPACE_NAME}-8000.app.github.dev"
+    # GitHub Codespaces - usa il dominio pubblico Codespaces
+    CS_DOMAIN=${GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN:-app.github.dev}
+    WP_URL="https://${CODESPACE_NAME}-8000.${CS_DOMAIN}"
     echo "🌐 Ambiente: GitHub Codespaces"
+    echo "📍 Dominio pubblico: $WP_URL"
 else
+    # Ambiente locale
     WP_URL="http://localhost:8000"
     echo "🌐 Ambiente: Locale"
 fi
 
-echo "📍 URL WordPress: $WP_URL"
+echo "📍 URL che verrà scritto nel database (wp_options): $WP_URL"
+
+# Credenziali (usare variabili d'ambiente o generare una password robusta)
+ADMIN_USER=${WP_ADMIN_USER:-admin}
+ADMIN_EMAIL=${WP_ADMIN_EMAIL:-admin@example.com}
+if [ -n "$WP_ADMIN_PASSWORD" ]; then
+    ADMIN_PASS="$WP_ADMIN_PASSWORD"
+    PASS_SOURCE="fornita da WP_ADMIN_PASSWORD (non mostrata)"
+else
+    ADMIN_PASS=$(openssl rand -base64 24 | tr -d '\n')
+    PASS_SOURCE="generata random"
+fi
 
 # Attendi che MySQL sia pronto
-echo "⏳ Attendo MySQL (10 secondi)..."
-sleep 10
+echo "⏳ Attendo MySQL..."
+db_attempts=0
+while ! docker exec wordpress-db mysqladmin ping -h localhost -u wordpress_user -pwordpress_pass -s >/dev/null 2>&1; do
+    db_attempts=$((db_attempts + 1))
+    if [ $db_attempts -ge 30 ]; then
+        echo "❌ MySQL non è pronto dopo l'attesa"
+        exit 1
+    fi
+    sleep 1
+done
+echo "✅ MySQL pronto"
+
+# Attendi che WordPress risponda sull'HTTP
+echo "⏳ Attendo che WordPress risponda..."
+wp_attempts=0
+while true; do
+    http_code=$(curl -s -o /dev/null -w "%{http_code}" "http://localhost:8000")
+    if [ "$http_code" = "200" ] || [ "$http_code" = "302" ]; then
+        echo "✅ WordPress risponde (HTTP $http_code)"
+        break
+    fi
+    wp_attempts=$((wp_attempts + 1))
+    if [ $wp_attempts -ge 30 ]; then
+        echo "❌ WordPress non risponde dopo l'attesa"
+        exit 1
+    fi
+    sleep 2
+done
 
 # Verifica se WordPress è già installato
 if docker exec wordpress-db mysql -u wordpress_user -pwordpress_pass -D wordpress_db -e "SELECT 1 FROM wp_options LIMIT 1;" >/dev/null 2>&1; then
@@ -35,10 +78,10 @@ else
     # Usa la API di installazione di WordPress via curl
     INSTALL_RESPONSE=$(curl -s -X POST "http://localhost:8000/wp-admin/install.php?step=2" \
         --data-urlencode "weblog_title=WordPress Headless CMS" \
-        --data-urlencode "user_name=admin" \
-        --data-urlencode "admin_email=admin@example.com" \
-        --data-urlencode "admin_password=password123" \
-        --data-urlencode "admin_password2=password123" \
+        --data-urlencode "user_name=${ADMIN_USER}" \
+        --data-urlencode "admin_email=${ADMIN_EMAIL}" \
+        --data-urlencode "admin_password=${ADMIN_PASS}" \
+        --data-urlencode "admin_password2=${ADMIN_PASS}" \
         --data-urlencode "pw_weak=1" \
         --data-urlencode "Submit=Install WordPress")
     
@@ -53,7 +96,13 @@ else
         
         echo "✅ URL configurato correttamente"
     else
-        echo "⚠️  Possibile errore nell'installazione, verifico..."
+        echo "⚠️  Installazione non confermata, verifico lo stato..."
+    fi
+
+    # Verifica che l'installazione abbia realmente scritto nel DB
+    if ! docker exec wordpress-db mysql -u wordpress_user -pwordpress_pass -D wordpress_db -e "SELECT COUNT(*) FROM wp_users;" >/dev/null 2>&1; then
+        echo "❌ Installazione non riuscita (wp_users mancante)"
+        exit 1
     fi
 fi
 
@@ -79,9 +128,17 @@ fi
 echo ""
 echo "✅ Installazione/Configurazione completata!"
 echo ""
+echo "� IMPORTANTE: L'URL è stato scritto nel database WordPress (wp_options)"
+echo "   Questo è il reference che WordPress userà per tutti i link e redirect"
 echo "🔗 URL Admin: $WP_URL/wp-admin"
-echo "👤 Username: admin"
-echo "🔑 Password: password123"
+echo "👤 Username: $ADMIN_USER"
+if [ "$PASS_SOURCE" = "generata random" ]; then
+    echo "🔑 Password generata: $ADMIN_PASS"
+else
+    echo "🔑 Password: fornita via WP_ADMIN_PASSWORD (non stampata)"
+fi
 echo ""
-echo "📝 Testa l'API: curl $WP_URL/wp-json/wp/v2/posts"
+echo "📝 Accedi e verifica:"
+echo "   - Impostazioni → Generali: controlla siteurl e home"
+echo "   - Testa l'API: curl $WP_URL/wp-json/wp/v2/posts"
 echo ""

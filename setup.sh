@@ -36,17 +36,19 @@ echo "✅ Cartelle create"
 echo ""
 
 # Configura variabili d'ambiente per Astro
+# NOTA: L'URL qui corrisponde a quello che verrà scritto nel database WordPress
 echo "⚙️  Configurazione variabili d'ambiente..."
 if [ ! -z "$CODESPACE_NAME" ]; then
-    WORDPRESS_URL="https://${CODESPACE_NAME}-8000.app.github.dev"
+    CS_DOMAIN=${GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN:-app.github.dev}
+    WORDPRESS_URL="https://${CODESPACE_NAME}-8000.${CS_DOMAIN}"
     
     cat > frontend/.env << EOF
-# WordPress API Configuration (GitHub Codespaces)
-PUBLIC_CODESPACE_NAME=$CODESPACE_NAME
+# WordPress API Configuration
+# IMPORTANTE: Deve corrispondere all'URL nel database WordPress (wp_options.siteurl)
 PUBLIC_WORDPRESS_URL=$WORDPRESS_URL
 EOF
     
-    echo "✅ File .env creato per Codespaces (PUBLIC_CODESPACE_NAME=$CODESPACE_NAME)"
+    echo "✅ File .env creato: PUBLIC_WORDPRESS_URL=$WORDPRESS_URL"
 else
     WORDPRESS_URL="http://localhost:8000"
     

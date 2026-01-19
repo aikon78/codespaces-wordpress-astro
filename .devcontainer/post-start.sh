@@ -27,13 +27,24 @@ else
 	echo "✅ Astro già in esecuzione"
 fi
 
-# Verifica port forwarding
+# Verifica port forwarding e mostra URL corretti
 echo ""
 echo "✅ Servizi avviati!"
 echo ""
-echo "📍 Accedi a:"
-echo "  - WordPress: http://localhost:8000 (oppure porta pubblica Codespaces)"
-echo "  - Frontend Astro: http://localhost:3000 (oppure porta pubblica Codespaces)"
-echo "  - phpMyAdmin: http://localhost:8080 (oppure porta pubblica Codespaces)"
+# Il dominio pubblico è quello nel database di WordPress, non localhost
+if [ -n "$CODESPACE_NAME" ]; then
+	CS_DOMAIN=${GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN:-app.github.dev}
+	WP_PUBLIC="https://${CODESPACE_NAME}-8000.${CS_DOMAIN}"
+	echo "📍 Accedi a:"
+	echo "  - WordPress: $WP_PUBLIC"
+	echo "  - WordPress Admin: $WP_PUBLIC/wp-admin"
+	echo "  - Frontend Astro: $WP_PUBLIC:3000 (oppure pannello PORTS)"
+	echo "  - phpMyAdmin: $WP_PUBLIC:8080 (oppure pannello PORTS)"
+else
+	echo "📍 Accedi a:"
+	echo "  - WordPress: http://localhost:8000"
+	echo "  - Frontend Astro: http://localhost:3000"
+	echo "  - phpMyAdmin: http://localhost:8080"
+fi
 echo ""
-echo "💡 Suggerimento: nel pannello PORTS della Codespace, fai click sui link per copiare gli URL pubblici"
+echo "💡 Nel pannello PORTS della Codespace, i link pubblici sono generati automaticamente"

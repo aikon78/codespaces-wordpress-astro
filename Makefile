@@ -22,6 +22,7 @@ help:
 	@echo "Utilità:"
 	@echo "  make wp-logs       - Log WordPress"
 	@echo "  make db-logs       - Log Database"
+	@echo "  make update-url    - Aggiorna URL WordPress nel database"
 	@echo ""
 
 setup:
@@ -80,3 +81,5 @@ install:
 	@npm install
 	@cd frontend && npm install
 	@echo "✅ Installazione completata"
+update-url:
+	@bash update-wordpress-url.sh

@@ -35,49 +35,80 @@ cd frontend
 npm run dev
 ```
 
-## ⚙️ Configurazione URL WordPress
+## ⚙️ Architettura URL WordPress
 
-L'URL di WordPress può essere configurato per diversi ambienti:
+**PRINCIPIO CHIAVE:** WordPress usa il **database** come fonte autoritativa per il dominio, non variabili d'ambiente o file di configurazione.
+
+### Come Funziona
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  DATABASE (wp_options) - FONTE AUTORITATIVA                 │
+│  • wp_options.siteurl = https://example.com                 │
+│  • wp_options.home = https://example.com                    │
+└─────────────────────────────────────────────────────────────┘
+              ↑                              ↑
+              │                              │
+    ┌─────────┴────────┐         ┌──────────┴──────────┐
+    │ install-wordpress.sh│         │ setup-wordpress-url.sh│
+    │ Scrive URL nel DB   │         │ Aggiorna URL nel DB   │
+    └─────────────────────┘         └─────────────────────┘
+
+         ↓ WordPress legge dal DB            ↓ Frontend chiama API
+
+┌──────────────────────┐         ┌────────────────────────┐
+│ wp-config.php        │         │ frontend/.env          │
+│ • NO WP_HOME         │         │ PUBLIC_WORDPRESS_URL=  │
+│ • NO WP_SITEURL      │         │ https://example.com    │
+│ • Solo proxy headers │         └────────────────────────┘
+└──────────────────────┘
+```
+
+### Workflow Cambio Dominio
+
+1. **Prima installazione**: `install-wordpress.sh` scrive URL nel database
+2. **Cambio ambiente**: `setup-wordpress-url.sh` aggiorna database
+3. **Frontend**: Aggiorna `frontend/.env` con stesso URL
+4. **WordPress**: Legge automaticamente dal database (nessuna modifica necessaria)
 
 ### Sviluppo Locale
 
 ```bash
-# Default: http://localhost:8000
+# install-wordpress.sh scrive: http://localhost:8000 nel DB
 docker-compose up -d
+bash install-wordpress.sh
 ```
 
 ### GitHub Codespaces
 
 ```bash
-# Configurazione automatica (rilevato da CODESPACE_NAME)
-bash setup-wordpress-url.sh
+# install-wordpress.sh auto-rileva e scrive: https://{CODESPACE_NAME}-8000.app.github.dev
+bash install-wordpress.sh
+# Verifica URL nel pannello PORTS
 ```
 
-### Produzione / Domini Personalizzati
+### Cambio Dominio (es: Codespaces → Produzione)
 
 ```bash
-# Via variabile d'ambiente
+# 1. Aggiorna il database WordPress
 export WORDPRESS_URL=https://example.com
-docker-compose up -d
-
-# O nel file .env
-# Copia da .env.example:
-cp .env.example .env
-# Modifica WORDPRESS_URL nel file .env
-docker-compose --env-file .env up -d
-
-# Poi configura WordPress
 bash setup-wordpress-url.sh
+
+# 2. Aggiorna frontend
+echo "PUBLIC_WORDPRESS_URL=https://example.com" > frontend/.env
+
+# 3. Riavvia servizi
+docker-compose restart
 ```
 
 ### Ambienti Supportati
 
-| Ambiente       | URL Esempio                             | Come impostarlo                        |
-| -------------- | --------------------------------------- | -------------------------------------- |
-| **Locale**     | `http://localhost:8000`                 | Default, nessuna configurazione        |
+| Ambiente       | URL Esempio                        | Come impostarlo                        |
+| -------------- | ---------------------------------- | -------------------------------------- |
+| **Locale**     | `http://localhost:8000`            | Default, nessuna configurazione        |
 | **Codespaces** | `https://name-8000.app.github.dev` | Auto-rilevato da `CODESPACE_NAME`      |
-| **Staging**    | `https://staging.example.com`           | `export WORDPRESS_URL=...`             |
-| **Produzione** | `https://example.com`                   | File `.env` + `setup-wordpress-url.sh` |
+| **Staging**    | `https://staging.example.com`      | `export WORDPRESS_URL=...`             |
+| **Produzione** | `https://example.com`              | File `.env` + `setup-wordpress-url.sh` |
 
 ## Struttura del Progetto
 
@@ -183,6 +214,17 @@ Consulta `docker-compose.prod.yml` per il deployment in produzione su server con
 - **[CONTRIBUTING.md](CONTRIBUTING.md)** - Come contribuire
 
 ## 🆘 Troubleshooting
+
+### "WordPress rimane legato a localhost"
+
+Se WordPress continua a reindirizzare a `localhost:8000` anche dopo essere in Codespaces:
+
+```bash
+# Soluzione automatica (consigliata)
+make update-url
+```
+
+Per una guida completa: [WORDPRESS_LOCALHOST_FIX.md](WORDPRESS_LOCALHOST_FIX.md)
 
 ### "WordPress non carica"
 
