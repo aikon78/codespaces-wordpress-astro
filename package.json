@@ -1,0 +1,25 @@
+{
+  "name": "wordpress-astro-headless",
+  "version": "1.0.0",
+  "description": "WordPress + Astro Headless CMS Project",
+  "private": true,
+  "scripts": {
+    "start": "bash setup.sh",
+    "dev": "cd frontend && npm run dev",
+    "build": "cd frontend && npm run build",
+    "preview": "cd frontend && npm run preview",
+    "docker:up": "docker-compose up -d",
+    "docker:down": "docker-compose down",
+    "docker:logs": "docker-compose logs -f",
+    "docker:restart": "docker-compose restart",
+    "setup": "bash setup.sh",
+    "update-url": "bash setup-wordpress-url.sh"
+  },
+  "keywords": [
+    "wordpress",
+    "astro",
+    "headless-cms"
+  ],
+  "author": "",
+  "license": "MIT"
+}
