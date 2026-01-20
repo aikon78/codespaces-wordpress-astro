@@ -16,10 +16,19 @@
         "astro-build.astro-vscode",
         "eamodio.gitlens",
         "ms-azuretools.vscode-docker",
-        "ms-vscode.makefile-tools"
+        "ms-vscode.makefile-tools",
+        "bradlc.vscode-tailwindcss",
+        "unifiedjs.vscode-mdx"
       ],
       "settings": {
         "editor.formatOnSave": true,
+        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "[astro]": {
+          "editor.defaultFormatter": "esbenp.prettier-vscode"
+        },
+        "[markdown]": {
+          "editor.defaultFormatter": "esbenp.prettier-vscode"
+        },
         "files.exclude": {
           "**/node_modules": true,
           "**/.git": true,

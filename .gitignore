@@ -25,8 +25,8 @@ wp-config.php
 !cms/themes/
 !cms/plugins/
 
-# Database
-db_data/
+# Database MySQL - persistente in Codespaces ma non versionato
+cms/db_data/
 *.sql
 
 # Logs

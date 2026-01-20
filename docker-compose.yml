@@ -8,7 +8,8 @@ services:
       MYSQL_USER: wordpress_user
       MYSQL_PASSWORD: wordpress_pass
     volumes:
-      - db_data:/var/lib/mysql
+      # Bind mount per persistenza in Codespaces (invece di volume Docker nominato)
+      - ./cms/db_data:/var/lib/mysql
     networks:
       - wordpress-network
     healthcheck:
@@ -39,6 +40,11 @@ services:
         define('FORCE_SSL_ADMIN', false);
         define('FORCE_SSL_LOGIN', false);
         define('AUTOMATIC_UPDATER_DISABLED', false);
+        /* GitHub Codespaces HTTPS support */
+        if (isset($$_SERVER['HTTP_HOST']) && strpos($$_SERVER['HTTP_HOST'], 'app.github.dev') !== false) {
+            $$_SERVER['HTTPS'] = 'on';
+            define('FORCE_SSL_ADMIN', true);
+        }
     ports:
       - "8000:80"
     volumes:
@@ -66,10 +72,6 @@ services:
     networks:
       - wordpress-network
     restart: unless-stopped
-
-volumes:
-  db_data:
-    driver: local
 
 networks:
   wordpress-network:

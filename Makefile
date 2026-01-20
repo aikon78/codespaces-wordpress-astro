@@ -23,6 +23,8 @@ help:
 	@echo "  make wp-logs       - Log WordPress"
 	@echo "  make db-logs       - Log Database"
 	@echo "  make update-url    - Aggiorna URL WordPress nel database"
+	@echo "  make wp-install    - Installa/Reinstalla WordPress"
+	@echo "  make wp-check      - Verifica stato WordPress"
 	@echo ""
 
 setup:
@@ -81,5 +83,19 @@ install:
 	@npm install
 	@cd frontend && npm install
 	@echo "✅ Installazione completata"
+
+wp-install:
+	@echo "🔧 Installazione WordPress..."
+	@bash ./install-wordpress.sh
+
+wp-check:
+	@echo "🔍 Verifica stato WordPress..."
+	@if docker exec wordpress-db mysql -u wordpress_user -pwordpress_pass wordpress_db -e "SHOW TABLES LIKE 'wp_options';" 2>/dev/null | grep -q wp_options; then \
+		echo "✅ WordPress è installato"; \
+		docker exec wordpress-db mysql -u wordpress_user -pwordpress_pass wordpress_db -e "SELECT option_value FROM wp_options WHERE option_name IN ('siteurl', 'home');" 2>/dev/null; \
+	else \
+		echo "❌ WordPress NON è installato"; \
+		echo "   Esegui: make wp-install"; \
+	fi
 update-url:
-	@bash update-wordpress-url.sh
+	@bash .devcontainer/configure-wordpress-url.sh

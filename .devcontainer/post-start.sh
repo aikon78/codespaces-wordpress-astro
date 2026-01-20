@@ -8,12 +8,35 @@ docker-compose up -d
 # Attendi che WordPress sia pronto
 echo "⏳ Attendo che WordPress sia pronto..."
 for i in {1..30}; do
-  if curl -s http://localhost:8000/wp-json/wp/v2/posts > /dev/null 2>&1; then
-    echo "✅ WordPress è pronto"
+  if curl -s http://localhost:8000 > /dev/null 2>&1; then
+    echo "✅ WordPress container è pronto"
     break
   fi
   sleep 2
 done
+
+# Verifica se WordPress è installato, altrimenti lo installa
+echo "🔍 Verifico installazione WordPress..."
+if ! docker exec wordpress-db mysql -u wordpress_user -pwordpress_pass wordpress_db -e "SHOW TABLES LIKE 'wp_options';" 2>/dev/null | grep -q wp_options; then
+	echo "⚠️  WordPress non installato - procedo con l'installazione..."
+	bash ./install-wordpress.sh
+else
+	echo "✅ WordPress già installato"
+	
+	# Configura URL WordPress per Codespaces
+	if [ -n "$CODESPACE_NAME" ]; then
+		echo "🔧 Configurazione URL WordPress per Codespaces..."
+		CS_DOMAIN=${GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN:-app.github.dev}
+		WP_PUBLIC="https://${CODESPACE_NAME}-8000.${CS_DOMAIN}"
+		
+		# Aggiorna URL nel database
+		docker exec wordpress-db mysql -u wordpress_user -pwordpress_pass wordpress_db -e \
+			"UPDATE wp_options SET option_value = '$WP_PUBLIC' WHERE option_name IN ('siteurl', 'home');" \
+			2>/dev/null
+		
+		echo "✅ URL WordPress configurato: $WP_PUBLIC"
+	fi
+fi
 
 # Avvia Astro se non è in esecuzione
 echo ""

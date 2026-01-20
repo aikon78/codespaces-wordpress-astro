@@ -16,6 +16,13 @@ npm run start
 
 **L'URL di WordPress verrà configurato automaticamente per Codespaces.**
 
+> ✨ **NUOVO:** Configurazione HTTPS automatica per Codespaces!
+> Il sistema rileva automaticamente l'ambiente e configura WordPress con HTTPS.
+> Vedi [CODESPACES_HTTPS_FIX.md](CODESPACES_HTTPS_FIX.md) per i dettagli.
+
+> 💾 **PERSISTENZA DATI:** Tutti i contenuti creati in WordPress (post, media, configurazioni)
+> sono **persistenti** tra i rebuild del Codespace. Vedi [DATA_PERSISTENCE.md](DATA_PERSISTENCE.md).
+
 O manualmente:
 
 ```bash
@@ -119,17 +126,29 @@ docker-compose restart
 │   ├── post-create.sh
 │   └── post-start.sh
 ├── cms/                        # WordPress CMS backend
+│   ├── db_data/                # Database MySQL (persistente) 💾
+│   ├── wordpress/              # File WordPress (persistente) 💾
+│   ├── themes/                 # Temi custom (versionati Git)
+│   └── plugins/                # Plugin custom (versionati Git)
 ├── frontend/                   # Astro frontend
 ├── docker-compose.yml          # Orchestrazione servizi
 ├── setup-wordpress-url.sh      # Script configurazione URL dinamica
 ├── .env.example                # Template variabili d'ambiente
 ├── Makefile                    # Comandi utili
 ├── CODESPACES.md               # Guida GitHub Codespaces
+├── DATA_PERSISTENCE.md         # Guida persistenza dati 💾
 ├── SETUP.md                    # Guida setup dettagliata
 └── README.md                   # Questo file
 ```
 
-## ⚙️ Configurazione Rapida
+> 💾 **Nota Persistenza**: I dati in `cms/db_data/` e `cms/wordpress/` sono
+> **persistenti** tra i rebuild del Codespace. Tutti i post, media e configurazioni
+> WordPress sono salvati permanentemente.
+>
+> Il **frontend Astro** (`frontend/`) è anch'esso completamente persistente, incluso
+> il codice sorgente, `node_modules/`, build (`dist/`) e cache (`.astro/`).
+>
+> Vedi [DATA_PERSISTENCE.md](DATA_PERSISTENCE.md) per dettagli completi.
 
 ### 1. Backend WordPress
 
@@ -214,6 +233,23 @@ Consulta `docker-compose.prod.yml` per il deployment in produzione su server con
 - **[CONTRIBUTING.md](CONTRIBUTING.md)** - Come contribuire
 
 ## 🆘 Troubleshooting
+
+### "WordPress non installato" o "502 Bad Gateway"
+
+Il progetto è configurato per installare automaticamente WordPress ad ogni avvio. Se riscontri errori:
+
+```bash
+# 1. Verifica lo stato di WordPress
+make wp-check
+
+# 2. Se non installato, forza l'installazione
+make wp-install
+
+# 3. Verifica i container
+docker-compose ps
+```
+
+**Nota:** Dal prossimo rebuild/restart del Codespace, WordPress verrà installato automaticamente grazie agli script `postCreate` e `postStart`.
 
 ### "WordPress rimane legato a localhost"
 

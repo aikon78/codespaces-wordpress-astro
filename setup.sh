@@ -88,6 +88,17 @@ for i in {1..30}; do
   sleep 2
 done
 
+# Configura URL WordPress nel database
+if [ ! -z "$CODESPACE_NAME" ]; then
+    echo "🔧 Configurazione URL WordPress nel database..."
+    CS_DOMAIN=${GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN:-app.github.dev}
+    WORDPRESS_URL="https://${CODESPACE_NAME}-8000.${CS_DOMAIN}"
+    
+    docker exec wordpress-db mysql -u wordpress_user -pwordpress_pass wordpress_db -e \
+        "UPDATE wp_options SET option_value = '$WORDPRESS_URL' WHERE option_name IN ('siteurl', 'home');" \
+        2>/dev/null && echo "✅ URL WordPress configurato nel database: $WORDPRESS_URL" || echo "⚠️  Database non ancora pronto per la configurazione"
+fi
+
 echo "✅ Servizi Docker avviati"
 echo ""
 
