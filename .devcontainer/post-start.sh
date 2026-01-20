@@ -5,38 +5,49 @@ echo "🔄 Avvio servizi Docker..."
 # Avvia Docker Compose
 docker-compose up -d
 
-# Attendi che WordPress sia pronto
-echo "⏳ Attendo che WordPress sia pronto..."
-for i in {1..30}; do
-  if curl -s http://localhost:8000 > /dev/null 2>&1; then
-    echo "✅ WordPress container è pronto"
-    break
-  fi
-  sleep 2
+# Attendi che WordPress risponda (homepage) e che l'API sia ok (DB up)
+echo "⏳ Attendo che WordPress sia pronto (HTTP + API)..."
+ready=false
+for i in {1..40}; do
+	# Homepage reachability
+	if curl -s http://localhost:8000/ > /dev/null 2>&1; then
+		# API check (verifica anche DB)
+		if curl -s http://localhost:8000/wp-json/wp/v2/posts?per_page=1 > /dev/null 2>&1; then
+			ready=true
+			break
+		fi
+	fi
+	sleep 2
 done
+
+if [ "$ready" = true ]; then
+	echo "✅ WordPress risponde (homepage + API)"
+else
+	echo "⚠️  WordPress non ha risposto entro il tempo massimo"
+fi
 
 # Verifica se WordPress è installato, altrimenti lo installa
 echo "🔍 Verifico installazione WordPress..."
 if ! docker exec wordpress-db mysql -u wordpress_user -pwordpress_pass wordpress_db -e "SHOW TABLES LIKE 'wp_options';" 2>/dev/null | grep -q wp_options; then
-	echo "⚠️  WordPress non installato - procedo con l'installazione..."
-	bash ./install-wordpress.sh
+  echo "⚠️  WordPress non installato - procedo con l'installazione..."
+  bash ./install-wordpress.sh
 else
-	echo "✅ WordPress già installato"
-	
-	# Configura URL WordPress per Codespaces
-	if [ -n "$CODESPACE_NAME" ]; then
-		echo "🔧 Configurazione URL WordPress per Codespaces..."
-		CS_DOMAIN=${GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN:-app.github.dev}
-		# Nota: usiamo HTTP (non HTTPS) perché il port forwarding di Codespaces non gestisce HTTPS al container
-		WP_PUBLIC="http://${CODESPACE_NAME}-8000.${CS_DOMAIN}"
-		
-		# Aggiorna URL nel database
-		docker exec wordpress-db mysql -u wordpress_user -pwordpress_pass wordpress_db -e \
-			"UPDATE wp_options SET option_value = '$WP_PUBLIC' WHERE option_name IN ('siteurl', 'home');" \
-			2>/dev/null
-		
-		echo "✅ URL WordPress configurato: $WP_PUBLIC"
-	fi
+  echo "✅ WordPress già installato"
+fi
+
+# Configura URL WordPress per Codespaces
+if [ -n "$CODESPACE_NAME" ]; then
+  echo "🔧 Configurazione URL WordPress per Codespaces..."
+  CS_DOMAIN=${GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN:-app.github.dev}
+  # Nota: usiamo HTTP (non HTTPS) perché il port forwarding di Codespaces non gestisce HTTPS al container
+  WP_PUBLIC="http://${CODESPACE_NAME}-8000.${CS_DOMAIN}"
+
+  # Aggiorna URL nel database
+  docker exec wordpress-db mysql -u wordpress_user -pwordpress_pass wordpress_db -e \
+    "UPDATE wp_options SET option_value = '$WP_PUBLIC' WHERE option_name IN ('siteurl', 'home');" \
+    2>/dev/null
+
+  echo "✅ URL WordPress configurato: $WP_PUBLIC"
 fi
 
 # Avvia Astro se non è in esecuzione
