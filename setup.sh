@@ -40,7 +40,8 @@ echo ""
 echo "⚙️  Configurazione variabili d'ambiente..."
 if [ ! -z "$CODESPACE_NAME" ]; then
     CS_DOMAIN=${GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN:-app.github.dev}
-    WORDPRESS_URL="https://${CODESPACE_NAME}-8000.${CS_DOMAIN}"
+    # Nota: usiamo HTTP (non HTTPS) perché il port forwarding di Codespaces non gestisce HTTPS al container
+    WORDPRESS_URL="http://${CODESPACE_NAME}-8000.${CS_DOMAIN}"
     
     cat > frontend/.env << EOF
 # WordPress API Configuration
@@ -92,7 +93,8 @@ done
 if [ ! -z "$CODESPACE_NAME" ]; then
     echo "🔧 Configurazione URL WordPress nel database..."
     CS_DOMAIN=${GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN:-app.github.dev}
-    WORDPRESS_URL="https://${CODESPACE_NAME}-8000.${CS_DOMAIN}"
+    # Nota: usiamo HTTP (non HTTPS) perché il port forwarding di Codespaces non gestisce HTTPS al container
+    WORDPRESS_URL="http://${CODESPACE_NAME}-8000.${CS_DOMAIN}"
     
     docker exec wordpress-db mysql -u wordpress_user -pwordpress_pass wordpress_db -e \
         "UPDATE wp_options SET option_value = '$WORDPRESS_URL' WHERE option_name IN ('siteurl', 'home');" \

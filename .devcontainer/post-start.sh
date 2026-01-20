@@ -27,7 +27,8 @@ else
 	if [ -n "$CODESPACE_NAME" ]; then
 		echo "🔧 Configurazione URL WordPress per Codespaces..."
 		CS_DOMAIN=${GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN:-app.github.dev}
-		WP_PUBLIC="https://${CODESPACE_NAME}-8000.${CS_DOMAIN}"
+		# Nota: usiamo HTTP (non HTTPS) perché il port forwarding di Codespaces non gestisce HTTPS al container
+		WP_PUBLIC="http://${CODESPACE_NAME}-8000.${CS_DOMAIN}"
 		
 		# Aggiorna URL nel database
 		docker exec wordpress-db mysql -u wordpress_user -pwordpress_pass wordpress_db -e \
@@ -57,7 +58,7 @@ echo ""
 # Il dominio pubblico è quello nel database di WordPress, non localhost
 if [ -n "$CODESPACE_NAME" ]; then
 	CS_DOMAIN=${GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN:-app.github.dev}
-	WP_PUBLIC="https://${CODESPACE_NAME}-8000.${CS_DOMAIN}"
+	WP_PUBLIC="http://${CODESPACE_NAME}-8000.${CS_DOMAIN}"
 	echo "📍 Accedi a:"
 	echo "  - WordPress: $WP_PUBLIC"
 	echo "  - WordPress Admin: $WP_PUBLIC/wp-admin"

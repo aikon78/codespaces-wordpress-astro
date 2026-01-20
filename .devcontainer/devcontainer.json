@@ -51,8 +51,7 @@
     "8000": {
       "label": "WordPress CMS",
       "onAutoForward": "notify",
-      "visibility": "public",
-      "protocol": "https"
+      "visibility": "public"
     },
     "8080": {
       "label": "phpMyAdmin",
