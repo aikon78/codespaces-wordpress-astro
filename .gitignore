@@ -35,6 +35,11 @@ logs/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+frontend-dev.log
+
+# Test files WordPress
+cms/wordpress/test-*.php
+cms/wordpress/dump-*.php
 
 # OS
 .DS_Store
