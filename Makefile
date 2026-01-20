@@ -19,10 +19,11 @@ help:
 	@echo "  make build         - Build Astro"
 	@echo "  make preview       - Preview build"
 	@echo ""
-	@echo "Utilità:"
+	@echo "WordPress (WP-CLI):"
 	@echo "  make wp-logs       - Log WordPress"
 	@echo "  make db-logs       - Log Database"
-	@echo "  make update-url    - Aggiorna URL WordPress nel database"
+	@echo "  make wp-cli        - Accedi a WP-CLI shell"
+	@echo "  make wp-update-url - Aggiorna URL WordPress nel database"
 	@echo "  make wp-install    - Installa/Reinstalla WordPress"
 	@echo "  make wp-check      - Verifica stato WordPress"
 	@echo ""
@@ -97,5 +98,12 @@ wp-check:
 		echo "❌ WordPress NON è installato"; \
 		echo "   Esegui: make wp-install"; \
 	fi
+
+wp-cli:
+	@echo "🔧 WP-CLI shell (digita 'exit' per uscire)"
+	@docker exec -it wordpress-cms bash -c "cd /var/www/html && wp --allow-root shell"
+
+wp-cli-help:
+	@docker exec wordpress-cms bash -c "cd /var/www/html && wp help --allow-root 2>/dev/null || wp --version --allow-root" | head -30
 update-url:
 	@bash .devcontainer/configure-wordpress-url.sh

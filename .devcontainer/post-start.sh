@@ -51,6 +51,20 @@ else
 	echo "✅ Astro già in esecuzione"
 fi
 
+# Assicura che WP-CLI sia disponibile
+echo ""
+echo "🔧 Verifico WP-CLI..."
+docker exec wordpress-cms bash -c "
+  if ! command -v wp &> /dev/null; then
+    echo '⬇️  Installazione WP-CLI...'
+    curl -s -o /usr/local/bin/wp https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar
+    chmod +x /usr/local/bin/wp
+    echo '✅ WP-CLI pronto'
+  else
+    echo '✅ WP-CLI disponibile'
+  fi
+" 2>/dev/null || echo "⚠️  Errore con WP-CLI"
+
 # Verifica port forwarding e mostra URL corretti
 echo ""
 echo "✅ Servizi avviati!"

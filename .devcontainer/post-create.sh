@@ -105,6 +105,18 @@ docker-compose up -d
 echo "\n--- Configurazione e Installazione WordPress ---"
 bash ./install-wordpress.sh
 
+echo "\n--- Installazione WP-CLI nel container WordPress ---"
+docker exec wordpress-cms bash -c "
+  if ! command -v wp &> /dev/null; then
+    echo '⬇️  Scaricamento WP-CLI...'
+    curl -s -o /usr/local/bin/wp https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar
+    chmod +x /usr/local/bin/wp
+    echo '✅ WP-CLI installato con successo'
+  else
+    echo '✅ WP-CLI già presente'
+  fi
+" 2>/dev/null || echo "⚠️  Errore durante installazione WP-CLI (continuo comunque)"
+
 echo "\n✅ Setup iniziale completato!"
 echo ""
 echo "🎉 WordPress è pronto!"

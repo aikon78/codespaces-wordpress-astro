@@ -1,0 +1,9 @@
+#!/bin/bash
+# Wrapper per wp-cli che esegue comandi nel container WordPress
+
+# Se nessun argomento, mostra l'aiuto
+if [ $# -eq 0 ]; then
+  docker exec wordpress-cms bash -c "cd /var/www/html && wp --allow-root" "$@"
+else
+  docker exec wordpress-cms bash -c "cd /var/www/html && wp --allow-root $*"
+fi
